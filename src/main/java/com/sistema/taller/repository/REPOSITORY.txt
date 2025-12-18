@@ -1,0 +1,87 @@
+package com.sistema.taller.repository;
+
+import com.sistema.taller.entity.Cliente;
+import org.springframework.data.jpa.repository.*;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+
+    @Query("""
+        SELECT DISTINCT c
+        FROM Cliente c
+        JOIN c.vehiculos v
+        JOIN v.garantia g
+        WHERE g.estadoGarantia = true
+    """)
+    List<Cliente> clientesConGarantia();
+}
+
+
+
+
+package com.sistema.taller.repository;
+
+import com.sistema.taller.entity.PrecioServicio;
+import com.sistema.taller.entity.TipoVehiculo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface PrecioServicioRepository
+        extends JpaRepository<PrecioServicio, Long> {
+
+    Optional<PrecioServicio> findByTipoVehiculoAndServicio(
+            TipoVehiculo tipoVehiculo,
+            String servicio
+    );
+}
+
+
+
+
+
+
+package com.sistema.taller.repository;
+
+import com.sistema.taller.entity.Servicio;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ServicioRepository extends JpaRepository<Servicio, Long> {
+}
+
+
+
+
+
+
+package com.sistema.taller.repository;
+
+import com.sistema.taller.entity.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+    Optional<Usuario> findByUsername(String username);
+}
+
+
+
+
+
+
+
+package com.sistema.taller.repository;
+
+import com.sistema.taller.entity.Vehiculo;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+
+public interface VehiculoRepository extends JpaRepository<Vehiculo, Long> {
+
+    List<Vehiculo> findByClienteIdCliente(Long idCliente);
+}

@@ -1,0 +1,232 @@
+package com.sistema.taller.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.util.List;
+
+@Entity
+@Table(name = "cliente")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Cliente {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_cliente")
+    private Long idCliente;
+
+    private String nombre;
+    private String telefono;
+    private String correo;
+
+    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("cliente")
+    private List<Vehiculo> vehiculos;
+}
+
+
+
+
+package com.sistema.taller.entity;
+
+public enum EstadoServicio {
+    PENDIENTE,
+    EN_PROCESO,
+    FINALIZADO,
+    CANCELADO
+}
+
+
+
+
+package com.sistema.taller.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "garantia")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Garantia {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_garantia")
+    private Long idGarantia;
+
+    private Boolean estadoGarantia;
+
+    @OneToOne
+    @JoinColumn(name = "vehiculo_id")
+    @JsonIgnoreProperties("garantia")
+    private Vehiculo vehiculo;
+}
+
+
+
+
+package com.sistema.taller.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+import java.math.BigDecimal;
+
+@Entity
+@Data
+public class PrecioServicio {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idPrecio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TipoVehiculo tipoVehiculo;
+
+    @Column(nullable = false)
+    private String servicio;
+
+    @Column(nullable = false)
+    private BigDecimal precioBase;
+}
+
+
+
+
+package com.sistema.taller.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+@Entity
+@Data
+public class Servicio {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idServicio;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id", nullable = false)
+    private Cliente cliente;
+
+    @ManyToOne
+    @JoinColumn(name = "vehiculo_id", nullable = false)
+    private Vehiculo vehiculo;
+
+    @Column(columnDefinition = "TEXT")
+    private String descripcion;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoServicio estado;
+
+    private LocalDate fechaIngreso;
+    private LocalDate fechaSalida;
+
+    private BigDecimal total;
+}
+
+
+
+
+
+package com.sistema.taller.entity;
+
+public enum TipoVehiculo {
+    AUTOMOVIL,
+    CAMIONETA,
+    MOTOCICLETA,
+    CAMION,
+    BUS,
+    MAQUINARIA
+}
+
+
+
+
+
+package com.sistema.taller.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Data
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(nullable = false)
+    private String rol; // ADMIN, EMPLEADO
+
+    private Boolean activo = true;
+}
+
+
+
+
+
+package com.sistema.taller.entity;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "vehiculo")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Vehiculo {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_vehiculo")
+    private Long idVehiculo;
+
+    private String tipoVehiculo;
+    private String marca;
+    private String modelo;
+    private Integer anio;
+
+    private String serieChasis;
+    private String serieMotor;
+    private String matricula;
+
+    private LocalDate fechaCompra;
+    private LocalDate fechaEntrada;
+
+    @ManyToOne
+    @JoinColumn(name = "cliente_id")
+    @JsonIgnoreProperties("vehiculos")
+    private Cliente cliente;
+
+    @OneToOne(mappedBy = "vehiculo", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("vehiculo")
+    private Garantia garantia;
+}
+
+
+
+
+

@@ -1,0 +1,187 @@
+package com.sistema.taller.controller;
+
+import com.sistema.taller.entity.Usuario;
+import com.sistema.taller.service.JwtService;
+import com.sistema.taller.service.UsuarioService;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final UsuarioService usuarioService;
+    private final JwtService jwtService;
+
+    @PostMapping("/login")
+    public LoginResponse login(@RequestBody LoginRequest request) {
+
+        Usuario usuario = usuarioService.autenticar(
+                request.getUsername(),
+                request.getPassword()
+        );
+
+        String token = jwtService.generarToken(
+                usuario.getUsername(),
+                usuario.getRol()
+        );
+
+        return new LoginResponse(token);
+    }
+
+    @Data
+    static class LoginRequest {
+        private String username;
+        private String password;
+    }
+
+    @Data
+    @AllArgsConstructor
+    static class LoginResponse {
+        private String token;
+    }
+}
+
+
+
+package com.sistema.taller.controller;
+
+import com.sistema.taller.entity.Cliente;
+import com.sistema.taller.repository.ClienteRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/clientes")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class ClienteController {
+
+    private final ClienteRepository clienteRepository;
+
+    // 🔹 LISTAR TODOS
+    @GetMapping
+    public List<Cliente> listarClientes() {
+        return clienteRepository.findAll();
+    }
+
+    // 🔹 INSERTAR CLIENTE + VEHÍCULO + GARANTÍA
+    @PostMapping
+    public Cliente guardarCliente(@RequestBody Cliente cliente) {
+        cliente.getVehiculos().forEach(v -> {
+            v.setCliente(cliente);
+            if (v.getGarantia() != null) {
+                v.getGarantia().setVehiculo(v);
+            }
+        });
+        return clienteRepository.save(cliente);
+    }
+
+    // 🔹 CLIENTES CON VEHÍCULOS EN GARANTÍA
+    @GetMapping("/con-garantia")
+    public List<Cliente> clientesConGarantia() {
+        return clienteRepository.clientesConGarantia();
+    }
+}
+
+
+
+package com.sistema.taller.controller;
+
+import com.sistema.taller.dto.CrearServicioRequest;
+import com.sistema.taller.entity.Servicio;
+import com.sistema.taller.service.OrdenServicioService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/ordenes-servicio")
+@RequiredArgsConstructor
+public class OrdenServicioController {
+
+    private final OrdenServicioService service;
+
+    @PostMapping
+    public Servicio crear(@RequestBody CrearServicioRequest req) {
+        return service.crearOrden(req);
+    }
+
+    @PutMapping("/{id}/cerrar")
+    public Servicio cerrar(
+            @PathVariable Long id,
+            @RequestParam BigDecimal total
+    ) {
+        return service.cerrarOrden(id, total);
+    }
+
+    @GetMapping
+    public List<Servicio> listar() {
+        return service.listar();
+    }
+}
+
+
+
+package com.sistema.taller.controller;
+
+import com.sistema.taller.entity.TipoVehiculo;
+import com.sistema.taller.service.ServicioService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+
+@RestController
+@RequestMapping("/api/servicios")
+@RequiredArgsConstructor
+public class ServicioController {
+
+    private final ServicioService servicioService;
+
+    @PostMapping("/cotizar")
+    public BigDecimal cotizar(
+            @RequestParam TipoVehiculo tipoVehiculo,
+            @RequestParam String servicio
+    ) {
+        return servicioService.calcularPrecio(tipoVehiculo, servicio);
+    }
+}
+
+
+
+
+package com.sistema.taller.controller;
+
+import com.sistema.taller.entity.Cliente;
+import com.sistema.taller.entity.Vehiculo;
+import com.sistema.taller.repository.ClienteRepository;
+import com.sistema.taller.repository.VehiculoRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/clientes/{id}/vehiculos")
+@RequiredArgsConstructor
+public class VehiculoController {
+
+    private final ClienteRepository clienteRepo;
+    private final VehiculoRepository vehiculoRepo;
+
+    @PostMapping
+    public Vehiculo guardar(
+            @PathVariable Long id,
+            @RequestBody Vehiculo v
+    ) {
+        Cliente c = clienteRepo.findById(id).orElseThrow();
+        v.setCliente(c);
+        return vehiculoRepo.save(v);
+    }
+}
