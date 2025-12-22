@@ -1,29 +1,26 @@
 package com.sistema.taller.config;
 
-import com.sistema.taller.entity.Usuario;
-import com.sistema.taller.repository.UsuarioRepository;
 import com.sistema.taller.service.JwtService;
+import com.sistema.taller.service.UsuarioService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
     @Override
     protected void doFilterInternal(
@@ -32,58 +29,39 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 🔴 NO FILTRAR LOGIN
-    	if (request.getServletPath().startsWith("/auth")) {
-    	    filterChain.doFilter(request, response);
-    	    return;
-    	}
+        String authHeader = request.getHeader("Authorization");
 
-
-        final String authHeader = request.getHeader("Authorization");
-
-        // 🔴 SI NO HAY TOKEN, SEGUIMOS SIN AUTENTICAR
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
+        String email = jwtService.extractUsername(token);
 
-        try {
-            String username = jwtService.extraerUsername(token);
+        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            if (username != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+            var userDetails = usuarioService.loadUserByUsername(email);
 
-                Usuario usuario = usuarioRepository
-                        .findByUsername(username)
-                        .orElse(null);
+            if (jwtService.isTokenValid(token, userDetails)) {
 
-                if (usuario != null) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    usuario.getUsername(),
-                                    null,
-                                    List.of(new SimpleGrantedAuthority(
-                                            "ROLE_" + usuario.getRol()))
-                            );
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
 
-                    SecurityContextHolder.getContext()
-                            .setAuthentication(authToken);
-                }
+                SecurityContextHolder.getContext().setAuthentication(authToken);
             }
-
-        } catch (Exception e) {
-            // ❌ TOKEN MALFORMADO → NO TIRAMOS 500
-            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
 }
+
 
