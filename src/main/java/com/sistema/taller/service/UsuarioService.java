@@ -1,26 +1,26 @@
 package com.sistema.taller.service;
 
-import com.sistema.taller.entity.Usuario;
 import com.sistema.taller.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UsuarioService {
+public class UsuarioService implements UserDetailsService {
 
-    private final UsuarioRepository repo;
-    private final PasswordEncoder encoder;
+    private final UsuarioRepository usuarioRepository;
 
-    public Usuario autenticar(String username, String password) {
-        Usuario user = repo.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    @Override
+    public UserDetails loadUserByUsername(String email)
+            throws UsernameNotFoundException {
 
-        if (!encoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
-        }
-
-        return user;
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UsernameNotFoundException("Usuario no encontrado: " + email)
+                );
     }
 }
+
