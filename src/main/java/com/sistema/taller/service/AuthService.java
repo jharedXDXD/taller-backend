@@ -1,7 +1,7 @@
 package com.sistema.taller.service;
 
-import com.sistema.taller.dto.AuthRequest;
-import com.sistema.taller.dto.AuthResponse;
+import com.sistema.taller.entity.AuthRequest;
+import com.sistema.taller.entity.AuthResponse;
 import com.sistema.taller.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,7 +25,8 @@ public class AuthService {
                 )
         );
 
-        var usuario = usuarioRepository.findByEmail(request.getEmail())
+        var usuario = usuarioRepository
+                .findByEmail(request.getEmail())
                 .orElseThrow();
 
         String token = jwtService.generateToken(usuario);
