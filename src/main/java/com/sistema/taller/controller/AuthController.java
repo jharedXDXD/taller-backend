@@ -1,7 +1,7 @@
 package com.sistema.taller.controller;
 
-import com.sistema.taller.dto.AuthRequest;
-import com.sistema.taller.dto.AuthResponse;
+import com.sistema.taller.entity.AuthRequest;
+import com.sistema.taller.entity.AuthResponse;
 import com.sistema.taller.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -19,3 +19,5 @@ public class AuthController {
         return authService.login(request);
     }
 }
+
+
