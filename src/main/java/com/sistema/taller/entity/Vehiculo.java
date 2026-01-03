@@ -30,8 +30,8 @@ public class Vehiculo {
     private LocalDate fechaCompra;
     private LocalDate fechaEntrada;
 
-    @ManyToOne
-    @JoinColumn(name = "cliente_id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "id_cliente", nullable = false)
     @JsonIgnoreProperties("vehiculos")
     private Cliente cliente;
 
@@ -39,3 +39,4 @@ public class Vehiculo {
     @JsonIgnoreProperties("vehiculo")
     private Garantia garantia;
 }
+
