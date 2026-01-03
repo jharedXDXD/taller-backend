@@ -18,8 +18,11 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
 
+        // Crear usuario administrador solo si no existe ninguno
         if (usuarioRepository.count() == 0) {
+
             Usuario admin = new Usuario();
+            admin.setNombre("Administrador");               // ✅ CORRECCIÓN CLAVE
             admin.setEmail("admin@taller.com");
             admin.setPassword(passwordEncoder.encode("admin123"));
             admin.setRol(Rol.ADMIN);
@@ -29,5 +32,3 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 }
-
-
