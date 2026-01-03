@@ -1,7 +1,8 @@
 package com.sistema.taller.controller;
 
+import com.sistema.taller.dto.AltaClienteDTO;
 import com.sistema.taller.entity.Cliente;
-import com.sistema.taller.repository.ClienteRepository;
+import com.sistema.taller.service.ClienteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,32 +11,36 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/clientes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ClienteController {
 
-    private final ClienteRepository clienteRepository;
+    private final ClienteService clienteService;
 
-    // 🔹 LISTAR TODOS
+    // 🔹 LISTAR CLIENTES
     @GetMapping
     public List<Cliente> listarClientes() {
-        return clienteRepository.findAll();
+        return clienteService.listar();
     }
 
-    // 🔹 INSERTAR CLIENTE + VEHÍCULO + GARANTÍA
-    @PostMapping
-    public Cliente guardarCliente(@RequestBody Cliente cliente) {
-        cliente.getVehiculos().forEach(v -> {
-            v.setCliente(cliente);
-            if (v.getGarantia() != null) {
-                v.getGarantia().setVehiculo(v);
-            }
-        });
-        return clienteRepository.save(cliente);
+    // 🔹 ALTA COMPLETA (CLIENTE + VEHÍCULO + GARANTÍA)
+    @PostMapping("/alta-completa")
+    public Cliente altaCompleta(@RequestBody AltaClienteDTO dto) {
+        return clienteService.altaCompleta(dto);
     }
 
-    // 🔹 CLIENTES CON VEHÍCULOS EN GARANTÍA
-    @GetMapping("/con-garantia")
-    public List<Cliente> clientesConGarantia() {
-        return clienteRepository.clientesConGarantia();
+    // 🔹 ACTUALIZAR
+    @PutMapping("/{id}")
+    public Cliente actualizar(
+            @PathVariable Long id,
+            @RequestBody AltaClienteDTO dto
+    ) {
+        return clienteService.actualizar(id, dto);
+    }
+
+    // 🔹 ELIMINAR
+    @DeleteMapping("/{id}")
+    public void eliminar(@PathVariable Long id) {
+        clienteService.eliminar(id);
     }
 }
+
+
